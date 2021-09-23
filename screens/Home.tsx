@@ -1,13 +1,16 @@
 import * as React from "react";
-import { Pressable, StyleSheet } from "react-native";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 
 import { Text, View } from "../components/Themed";
 import { RootTabScreenProps } from "../types";
 import * as Location from "expo-location";
 import { useEffect } from "react";
 import { useQuery } from "react-query";
-import { Ionicons } from "@expo/vector-icons";
-import Colors from "../constants/Colors";
 import useColorScheme from "../hooks/useColorScheme";
 
 export default function HomeScreen({ navigation }: RootTabScreenProps<"Home">) {
@@ -39,26 +42,7 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<"Home">) {
     }
   );
 
-  useEffect(() => {
-    navigation.setOptions({
-      headerLeft: () =>
-        locationQuery.isFetching || forecastQuery.isFetching ? null : (
-          <Pressable
-            onPress={() => locationQuery.refetch()}
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.5 : 1,
-            })}
-          >
-            <Ionicons
-              name="ios-refresh"
-              size={24}
-              color={Colors[colorScheme].text}
-              style={{ marginLeft: 15 }}
-            />
-          </Pressable>
-        ),
-    });
-  }, [navigation, locationQuery.isFetching, forecastQuery.isFetching]);
+  const isRefreshing = locationQuery.isFetching || forecastQuery.isFetching;
 
   useEffect(() => {
     if (typeof forecastQuery.data?.position?.name === "string")
@@ -67,31 +51,44 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<"Home">) {
 
   return (
     <View style={styles.container}>
-      {forecastQuery.data != null && (
-        <>
-          <Text style={styles.title}>
-            {forecastQuery.data.forecast[0].T.value}°
-          </Text>
-          <View
-            style={styles.separator}
-            lightColor="#eee"
-            darkColor="rgba(255,255,255,0.1)"
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => locationQuery.refetch()}
           />
-          <Text
-            style={styles.getStartedText}
-            lightColor="rgba(0,0,0,0.8)"
-            darkColor="rgba(255,255,255,0.8)"
-          >
-            {forecastQuery.data.forecast[0].weather.desc}
-          </Text>
-        </>
-      )}
+        }
+      >
+        {forecastQuery.data != null && (
+          <>
+            <Text style={styles.title}>
+              {forecastQuery.data.forecast[0].T.value}°
+            </Text>
+            <View
+              style={styles.separator}
+              lightColor="#eee"
+              darkColor="rgba(255,255,255,0.1)"
+            />
+            <Text
+              style={styles.getStartedText}
+              lightColor="rgba(0,0,0,0.8)"
+              darkColor="rgba(255,255,255,0.8)"
+            >
+              {forecastQuery.data.forecast[0].weather.desc}
+            </Text>
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
