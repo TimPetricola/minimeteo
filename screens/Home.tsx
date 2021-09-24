@@ -1,19 +1,17 @@
 import * as React from "react";
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 
 import { Text, View } from "../components/Themed";
-import { RootTabScreenProps } from "../types";
+import { RootStackScreenProps } from "../types";
 import * as Location from "expo-location";
 import { useEffect } from "react";
 import { useQuery } from "react-query";
 import useColorScheme from "../hooks/useColorScheme";
+import { forecast } from "../lib/meteoFrance";
 
-export default function HomeScreen({ navigation }: RootTabScreenProps<"Home">) {
+export default function HomeScreen({
+  navigation,
+}: RootStackScreenProps<"Home">) {
   const colorScheme = useColorScheme();
 
   const locationQuery = useQuery(["location"], async () => {
@@ -30,12 +28,13 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<"Home">) {
       locationQuery.data?.coords.longitude,
     ],
     async () => {
-      const response = await fetch(
-        `https://meteo-api.vercel.app/api/forecasts?latitude=${locationQuery.data?.coords.latitude}&longitude=${locationQuery.data?.coords.longitude}`
-      );
-      if (!response.ok) throw new Error("Network response was not ok");
+      if (locationQuery.data == null)
+        throw new Error("Location data should not be null");
 
-      return await response.json();
+      return forecast(
+        locationQuery.data.coords.latitude,
+        locationQuery.data.coords.longitude
+      );
     },
     {
       enabled: locationQuery.data != null,
