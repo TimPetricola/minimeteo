@@ -11,17 +11,6 @@ import { RootStackParamList } from "../types";
 
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [Linking.makeUrl("/")],
-  config: {
-    screens: {
-      Home: {
-        screens: {
-          HomeScreen: "home",
-        },
-      },
-      Modal: "modal",
-      NotFound: "*",
-    },
-  },
 };
 
 export default linking;
