@@ -6,14 +6,12 @@ import { RootStackScreenProps } from "../types";
 import * as Location from "expo-location";
 import { useEffect } from "react";
 import { useQuery } from "react-query";
-import useColorScheme from "../hooks/useColorScheme";
-import { forecast } from "../lib/meteoFrance";
+import { fetchForecast } from "../lib/meteoFrance";
+import { SvgUri, SvgXml } from "react-native-svg";
 
 export default function HomeScreen({
   navigation,
 }: RootStackScreenProps<"Home">) {
-  const colorScheme = useColorScheme();
-
   const locationQuery = useQuery(["location"], async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") return undefined;
@@ -31,7 +29,7 @@ export default function HomeScreen({
       if (locationQuery.data == null)
         throw new Error("Location data should not be null");
 
-      return forecast(
+      return fetchForecast(
         locationQuery.data.coords.latitude,
         locationQuery.data.coords.longitude
       );
@@ -61,8 +59,12 @@ export default function HomeScreen({
       >
         {forecastQuery.data != null && (
           <>
+            <SvgUri
+              style={styles.icon}
+              uri={`https://meteo-api.vercel.app/api/icons/${forecastQuery.data.hourly[0].iconId}.svg`}
+            />
             <Text style={styles.title}>
-              {forecastQuery.data.forecast[0].T.value}°
+              {Math.round(forecastQuery.data.hourly[0].temperature)}°
             </Text>
             <View
               style={styles.separator}
@@ -74,7 +76,7 @@ export default function HomeScreen({
               lightColor="rgba(0,0,0,0.8)"
               darkColor="rgba(255,255,255,0.8)"
             >
-              {forecastQuery.data.forecast[0].weather.desc}
+              {forecastQuery.data.hourly[0].weatherDescription}
             </Text>
           </>
         )}
@@ -106,4 +108,5 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: "center",
   },
+  icon: { width: 100, height: 100 },
 });
