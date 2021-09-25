@@ -56,14 +56,17 @@ export const parseResponse = <TData extends any = any, O = TData, I = unknown>(
   return result.right;
 };
 
+const RawPosition = t.type({
+  lat: t.number,
+  lon: t.number,
+  alti: t.number,
+  name: t.string,
+  timezone: t.string,
+  rain_product_available: t.union([t.literal(0), t.literal(1)]),
+});
+
 const RawForecast = t.type({
-  position: t.type({
-    lat: t.number,
-    lon: t.number,
-    alti: t.number,
-    name: t.string,
-    timezone: t.string,
-  }),
+  position: RawPosition,
   daily_forecast: t.array(
     t.type({
       dt: t.number,
@@ -88,8 +91,21 @@ const RawForecast = t.type({
   ),
 });
 
+const RawRainForecast = t.type({
+  forecast: t.array(
+    t.type({
+      dt: t.number,
+      rain: t.number,
+      desc: t.string,
+    })
+  ),
+});
+
 export const parseForecastResponse = (payload: any) =>
   parseResponse(payload, RawForecast);
+
+export const parseRainForecastResponse = (payload: any) =>
+  parseResponse(payload, RawRainForecast);
 
 export const sanitizeForecast = (
   payload: t.TypeOf<typeof RawForecast>
@@ -100,6 +116,7 @@ export const sanitizeForecast = (
     longitude: number;
     name: string;
     timeZone: string;
+    isRainForecastAvailable: boolean;
   };
   hourly: HourlyForecast[];
   daily: {
@@ -114,6 +131,7 @@ export const sanitizeForecast = (
       longitude: payload.position.lon,
       name: payload.position.name,
       timeZone: payload.position.timezone,
+      isRainForecastAvailable: payload.position.rain_product_available === 1,
     },
     hourly: payload.forecast
       .filter(
@@ -140,19 +158,25 @@ export const sanitizeForecast = (
   };
 };
 
+export const sanitizeRainForecast = (
+  payload: t.TypeOf<typeof RawRainForecast>
+): {
+  upcomingRain: { datetime: Date; value: number; description: string }[];
+} => {
+  return {
+    upcomingRain: payload.forecast.map((raw) => ({
+      datetime: new Date(raw.dt * 1000),
+      value: raw.rain,
+      description: raw.desc,
+    })),
+  };
+};
+
 export const fetchForecast = async (
   lat: string | number,
   lon: string | number
 ) => {
-  const payload = await request<{
-    position: {
-      lat: number;
-      lon: number;
-      alt: number;
-      name: string;
-      rain_product_available: 0 | 1;
-    };
-  }>("/forecast", {
+  const payload = await request("/forecast", {
     lat: lat.toString(),
     lon: lon.toString(),
   });
@@ -160,11 +184,14 @@ export const fetchForecast = async (
   return sanitizeForecast(parseForecastResponse(payload));
 };
 
-export const rain = async (lat: string, lon: string) => {
-  const rain = await request<unknown>(`/rain`, {
-    lat,
-    lon,
+export const fetchRainForecast = async (
+  lat: string | number,
+  lon: string | number
+) => {
+  const payload = await request(`/rain`, {
+    lat: lat.toString(),
+    lon: lon.toString(),
   });
 
-  return rain;
+  return sanitizeRainForecast(parseRainForecastResponse(payload));
 };

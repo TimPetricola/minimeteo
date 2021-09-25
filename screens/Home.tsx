@@ -6,7 +6,7 @@ import { RootStackScreenProps } from "../types";
 import * as Location from "expo-location";
 import { useEffect, useMemo } from "react";
 import { useQuery } from "react-query";
-import { fetchForecast } from "../lib/meteoFrance";
+import { fetchForecast, fetchRainForecast } from "../lib/meteoFrance";
 import { startOfHour } from "date-fns";
 import { HourlyCell } from "../components/HourlyCell";
 import { HourlyForecast } from "../lib/types";
@@ -39,6 +39,27 @@ export default function HomeScreen({
     },
     {
       enabled: locationQuery.data != null,
+    }
+  );
+
+  const rainForecastQuery = useQuery(
+    [
+      "rain",
+      locationQuery.data?.timestamp,
+      locationQuery.data?.coords.latitude,
+      locationQuery.data?.coords.longitude,
+    ],
+    async () => {
+      if (locationQuery.data == null)
+        throw new Error("Location data should not be null");
+
+      return fetchRainForecast(
+        locationQuery.data.coords.latitude,
+        locationQuery.data.coords.longitude
+      );
+    },
+    {
+      enabled: forecastQuery.data?.position?.isRainForecastAvailable === true,
     }
   );
 
@@ -93,6 +114,17 @@ export default function HomeScreen({
               lightColor="#eee"
               darkColor="rgba(255,255,255,0.1)"
             />
+
+            {rainForecastQuery.data != null && (
+              <>
+                <Text>{JSON.stringify(rainForecastQuery.data)}</Text>
+                <View
+                  style={styles.separator}
+                  lightColor="#eee"
+                  darkColor="rgba(255,255,255,0.1)"
+                />
+              </>
+            )}
 
             <FlatList
               data={forecastQuery.data.hourly.filter(

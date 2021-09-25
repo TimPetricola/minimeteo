@@ -27,6 +27,7 @@ it(".sanitizeForecast", () => {
   expect(data.position).toMatchInlineSnapshot(`
     Object {
       "altitude": 447,
+      "isRainForecastAvailable": false,
       "latitude": 45.898493,
       "longitude": 6.128991,
       "name": "Annecy",
