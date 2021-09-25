@@ -1,4 +1,5 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import { format, utcToZonedTime } from "date-fns-tz";
 import { HourlyForecast } from "../lib/types";
 import { View, Text } from "./Themed";
@@ -12,24 +13,23 @@ export function HourlyCell({
   timeZone: string;
 }) {
   return (
-    <View
-      style={{
-        borderWidth: 1,
-        borderColor: "red",
-        marginBottom: 10,
-      }}
-    >
+    <View style={styles.cell}>
       <Text>
         {format(utcToZonedTime(forecast.datetime, timeZone), "HH'h'", {
           timeZone: timeZone,
         })}
       </Text>
-      <Text>
-        {Math.round(forecast.temperature)}° (ressentie:
-        {Math.round(forecast.perceivedTemperature)}°)
-      </Text>
       <WeatherIcon style={{ width: 50, height: 50 }} id={forecast.iconId} />
-      <Text>{forecast.weatherDescription}</Text>
+      <Text>{Math.round(forecast.temperature)}°</Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  cell: {
+    display: "flex",
+    paddingHorizontal: 5,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+});

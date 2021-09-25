@@ -68,8 +68,8 @@ const RawForecast = t.type({
     t.type({
       dt: t.number,
       T: t.type({
-        min: t.union([t.number, t.null]),
-        max: t.union([t.number, t.null]),
+        min: t.number,
+        max: t.number,
       }),
     })
   ),
@@ -77,12 +77,12 @@ const RawForecast = t.type({
     t.type({
       dt: t.number,
       T: t.type({
-        value: t.union([t.number, t.null]),
-        windchill: t.union([t.number, t.null]),
+        value: t.number,
+        windchill: t.number,
       }),
       weather: t.type({
-        icon: t.union([t.string, t.null]),
-        desc: t.union([t.string, t.null]),
+        icon: t.string,
+        desc: t.string,
       }),
     })
   ),
