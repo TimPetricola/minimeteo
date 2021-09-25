@@ -4,10 +4,14 @@ import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { Text, View } from "../components/Themed";
 import { RootStackScreenProps } from "../types";
 import * as Location from "expo-location";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "react-query";
 import { fetchForecast } from "../lib/meteoFrance";
 import { SvgUri, SvgXml } from "react-native-svg";
+import { startOfHour } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz/esm";
+import { format } from "date-fns-tz";
+import { HourlyCell } from "../components/HourlyCell";
 
 export default function HomeScreen({
   navigation,
@@ -39,6 +43,8 @@ export default function HomeScreen({
     }
   );
 
+  const now = useMemo(() => new Date(), []);
+
   const isRefreshing = locationQuery.isFetching || forecastQuery.isFetching;
 
   useEffect(() => {
@@ -59,7 +65,7 @@ export default function HomeScreen({
       >
         {forecastQuery.data != null && (
           <>
-            <SvgUri
+            {/* <SvgUri
               style={styles.icon}
               uri={`https://meteo-api.vercel.app/api/icons/${forecastQuery.data.hourly[0].iconId}.svg`}
             />
@@ -77,7 +83,26 @@ export default function HomeScreen({
               darkColor="rgba(255,255,255,0.8)"
             >
               {forecastQuery.data.hourly[0].weatherDescription}
+            </Text> */}
+            <Text>
+              current date:{" "}
+              {format(
+                utcToZonedTime(now, forecastQuery.data.position.timeZone),
+                "d.M.yyyy HH:mm:ss.SSS 'GMT' XXX (z)",
+                { timeZone: forecastQuery.data.position.timeZone }
+              )}
             </Text>
+            <View>
+              {forecastQuery.data.hourly
+                .filter((hourly) => hourly.datetime >= startOfHour(now))
+                .map((hourly) => (
+                  <HourlyCell
+                    key={hourly.datetime.toISOString()}
+                    forecast={hourly}
+                    timeZone={forecastQuery.data.position.timeZone}
+                  />
+                ))}
+            </View>
           </>
         )}
       </ScrollView>
@@ -91,8 +116,8 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    // alignItems: "center",
+    // justifyContent: "center",
   },
   title: {
     fontSize: 20,

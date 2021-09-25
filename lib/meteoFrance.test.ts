@@ -30,6 +30,7 @@ it(".sanitizeForecast", () => {
       "latitude": 45.898493,
       "longitude": 6.128991,
       "name": "Annecy",
+      "timeZone": "Europe/Paris",
     }
   `);
   expect(data.hourly).toMatchSnapshot();
