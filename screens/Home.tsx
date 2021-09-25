@@ -18,7 +18,15 @@ export default function HomeScreen({
   const locationQuery = useQuery(["location"], async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") return undefined;
-    return Location.getCurrentPositionAsync({});
+    return (
+      (await Location.getLastKnownPositionAsync({
+        maxAge: 1000 * 60 * 10, // last 10 minutes
+        requiredAccuracy: Location.Accuracy.Low,
+      })) ??
+      (await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low,
+      }))
+    );
   });
 
   const forecastQuery = useQuery(
