@@ -2,7 +2,12 @@ import { number } from "fp-ts";
 import { isLeft } from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter";
-import { DailyForecast, HourlyForecast } from "./types";
+import {
+  DailyForecast,
+  ForecastResponse,
+  HourlyForecast,
+  RainForecastResponse,
+} from "./types";
 
 const API_BASE_URL = "https://webservice.meteofrance.com";
 const METEO_FRANCE_TOKEN = "__Wj7dVSTjV9YGu1guveLyDq0g7S7TfTjaHBTPTpO0kj8__";
@@ -113,18 +118,7 @@ export const parseRainForecastResponse = (payload: any) =>
 
 export const sanitizeForecast = (
   payload: t.TypeOf<typeof RawForecast>
-): {
-  position: {
-    altitude: number;
-    latitude: number;
-    longitude: number;
-    name: string;
-    timeZone: string;
-    isRainForecastAvailable: boolean;
-  };
-  hourly: HourlyForecast[];
-  daily: DailyForecast[];
-} => {
+): ForecastResponse => {
   return {
     position: {
       altitude: payload.position.alti,
@@ -163,9 +157,7 @@ export const sanitizeForecast = (
 
 export const sanitizeRainForecast = (
   payload: t.TypeOf<typeof RawRainForecast>
-): {
-  upcomingRain: { datetime: Date; value: number; description: string }[];
-} => {
+): RainForecastResponse => {
   return {
     upcomingRain: payload.forecast.map((raw) => ({
       datetime: new Date(raw.dt * 1000),
