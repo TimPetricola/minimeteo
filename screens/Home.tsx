@@ -14,6 +14,7 @@ import { WeatherIcon } from "../components/WeatherIcon";
 import { format, utcToZonedTime } from "date-fns-tz";
 import { DailyCell } from "../components/DailyCell";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PagerView from "react-native-pager-view";
 
 export default function HomeScreen({
   navigation,
@@ -94,40 +95,46 @@ export default function HomeScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={() => locationQuery.refetch()}
-          />
-        }
-      >
-        {forecastQuery.data != null && (
-          <>
-            <Text style={styles.title}>{forecastQuery.data.position.name}</Text>
-            <WeatherIcon
-              style={styles.icon}
-              id={forecastQuery.data.hourly[0].iconId}
-            />
-            <Text style={styles.title}>
-              {Math.round(forecastQuery.data.hourly[0].temperature)}°
-            </Text>
-            <Text
-              style={styles.getStartedText}
-              lightColor="rgba(0,0,0,0.8)"
-              darkColor="rgba(255,255,255,0.8)"
-            >
-              {forecastQuery.data.hourly[0].weatherDescription}
-            </Text>
+      <PagerView style={styles.pagerView} initialPage={0}>
+        <View key="1">
+          <ScrollView
+            contentContainerStyle={styles.scrollView}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={() => locationQuery.refetch()}
+              />
+            }
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+          >
+            {forecastQuery.data != null && (
+              <>
+                <Text style={styles.title}>
+                  {forecastQuery.data.position.name}
+                </Text>
+                <WeatherIcon
+                  style={styles.icon}
+                  id={forecastQuery.data.hourly[0].iconId}
+                />
+                <Text style={styles.title}>
+                  {Math.round(forecastQuery.data.hourly[0].temperature)}°
+                </Text>
+                <Text
+                  style={styles.getStartedText}
+                  lightColor="rgba(0,0,0,0.8)"
+                  darkColor="rgba(255,255,255,0.8)"
+                >
+                  {forecastQuery.data.hourly[0].weatherDescription}
+                </Text>
 
-            <View
-              style={styles.separator}
-              lightColor="#eee"
-              darkColor="rgba(255,255,255,0.1)"
-            />
+                <View
+                  style={styles.separator}
+                  lightColor="#eee"
+                  darkColor="rgba(255,255,255,0.1)"
+                />
 
-            {/* {rainForecastQuery.data != null && (
+                {/* {rainForecastQuery.data != null && (
               <>
                 <Text>{JSON.stringify(rainForecastQuery.data)}</Text>
                 <View
@@ -138,30 +145,40 @@ export default function HomeScreen({
               </>
             )} */}
 
-            <FlatList
-              data={forecastQuery.data.hourly.filter((hourly) =>
-                isAfter(hourly.datetime, startOfHour(now))
-              )}
-              renderItem={renderHourlyForecast}
-              keyExtractor={(item) => item.datetime.toISOString()}
-              horizontal
-            />
+                <FlatList
+                  data={forecastQuery.data.hourly.filter((hourly) =>
+                    isAfter(hourly.datetime, startOfHour(now))
+                  )}
+                  renderItem={renderHourlyForecast}
+                  keyExtractor={(item) => item.datetime.toISOString()}
+                  horizontal
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}
+                />
 
-            {forecastQuery.data.daily.map((daily) => (
-              <DailyCell
-                key={daily.datetime.toISOString()}
-                forecast={daily}
-                timeZone={forecastQuery.data.position.timeZone}
-              />
-            ))}
-          </>
-        )}
-      </ScrollView>
+                {forecastQuery.data.daily.map((daily) => (
+                  <DailyCell
+                    key={daily.datetime.toISOString()}
+                    forecast={daily}
+                    timeZone={forecastQuery.data.position.timeZone}
+                  />
+                ))}
+              </>
+            )}
+          </ScrollView>
+        </View>
+        <View key="2">
+          <Text>Second page</Text>
+        </View>
+      </PagerView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  pagerView: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: "white",
