@@ -61,6 +61,21 @@ export const parseResponse = <TData extends any = any, O = TData, I = unknown>(
   return result.right;
 };
 
+export const safeParseResponse = <
+  TData extends any = any,
+  O = TData,
+  I = unknown
+>(
+  rawData: I,
+  codec: t.Type<TData, O, I>
+): TData | undefined => {
+  try {
+    return parseResponse(rawData, codec);
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const RawPosition = t.type({
   lat: t.number,
   lon: t.number,
@@ -70,101 +85,104 @@ const RawPosition = t.type({
   rain_product_available: t.union([t.literal(0), t.literal(1)]),
 });
 
-const RawForecast = t.type({
+const RawDailyForecast = t.type({
+  dt: t.number,
+  T: t.type({
+    min: t.number,
+    max: t.number,
+  }),
+  weather12H: t.type({
+    icon: t.string,
+    desc: t.string,
+  }),
+});
+
+const RawHourlyForecast = t.type({
+  dt: t.number,
+  T: t.type({
+    value: t.number,
+    windchill: t.number,
+  }),
+  weather: t.type({
+    icon: t.string,
+    desc: t.string,
+  }),
+});
+
+const RawForecastResponse = t.type({
   position: RawPosition,
-  daily_forecast: t.array(
-    t.type({
-      dt: t.number,
-      T: t.type({
-        min: t.number,
-        max: t.number,
-      }),
-      weather12H: t.type({
-        icon: t.string,
-        desc: t.string,
-      }),
-    })
-  ),
-  forecast: t.array(
-    t.type({
-      dt: t.number,
-      T: t.type({
-        value: t.number,
-        windchill: t.number,
-      }),
-      weather: t.type({
-        icon: t.string,
-        desc: t.string,
-      }),
-    })
-  ),
+  daily_forecast: t.array(RawDailyForecast),
+  forecast: t.array(RawHourlyForecast),
 });
 
-const RawRainForecast = t.type({
-  forecast: t.array(
-    t.type({
-      dt: t.number,
-      rain: t.number,
-      desc: t.string,
-    })
-  ),
+const RawRootForecastResponse = t.type({
+  position: t.unknown,
+  daily_forecast: t.array(t.unknown),
+  forecast: t.array(t.unknown),
 });
 
-export const parseForecastResponse = (payload: any) =>
-  parseResponse(payload, RawForecast);
+const RawRain = t.type({
+  dt: t.number,
+  rain: t.number,
+  desc: t.string,
+});
 
-export const parseRainForecastResponse = (payload: any) =>
-  parseResponse(payload, RawRainForecast);
+const RawRootRainResponse = t.type({
+  forecast: t.array(t.unknown),
+});
 
-export const sanitizeForecast = (
-  payload: t.TypeOf<typeof RawForecast>
-): ForecastResponse => {
-  return {
-    position: {
-      altitude: payload.position.alti,
-      latitude: payload.position.lat,
-      longitude: payload.position.lon,
-      name: payload.position.name,
-      timeZone: payload.position.timezone,
-      isRainForecastAvailable: payload.position.rain_product_available === 1,
-    },
-    hourly: payload.forecast
-      .filter(
-        (raw) =>
-          typeof raw.T.windchill === "number" &&
-          typeof raw.weather.icon === "string" &&
-          typeof raw.weather.desc === "string"
-      )
-      .map((raw) => ({
-        datetime: new Date(raw.dt * 1000),
-        temperature: raw.T.value,
-        perceivedTemperature: raw.T.windchill,
-        weatherDescription: raw.weather.desc,
-        iconId: raw.weather.icon,
-      })),
-    daily: payload.daily_forecast
-      .filter(
-        (raw) => typeof raw.T.min === "number" && typeof raw.T.max === "number"
-      )
-      .map((raw) => ({
-        datetime: new Date(raw.dt * 1000),
-        temperature: { min: raw.T.min, max: raw.T.max },
-        weatherDescription: raw.weather12H.desc,
-        iconId: raw.weather12H.icon,
-      })),
+const isNotUndefined = <T>(value: T | undefined): value is T =>
+  typeof value !== "undefined";
+
+export const parseForecastResponse = (payload: any): ForecastResponse => {
+  const rawResponse = parseResponse(payload, RawRootForecastResponse);
+  const rawPosition = parseResponse(rawResponse.position, RawPosition);
+
+  const position = {
+    altitude: rawPosition.alti,
+    latitude: rawPosition.lat,
+    longitude: rawPosition.lon,
+    name: rawPosition.name,
+    timeZone: rawPosition.timezone,
+    isRainForecastAvailable: rawPosition.rain_product_available === 1,
   };
+
+  const hourly = rawResponse.forecast
+    .map((raw) => safeParseResponse(raw, RawHourlyForecast))
+    .filter(isNotUndefined)
+    .map((raw) => ({
+      datetime: new Date(raw.dt * 1000),
+      temperature: raw.T.value,
+      perceivedTemperature: raw.T.windchill,
+      weatherDescription: raw.weather.desc,
+      iconId: raw.weather.icon,
+    }));
+
+  const daily = rawResponse.daily_forecast
+    .map((raw) => safeParseResponse(raw, RawDailyForecast))
+    .filter(isNotUndefined)
+    .map((raw) => ({
+      datetime: new Date(raw.dt * 1000),
+      temperature: { min: raw.T.min, max: raw.T.max },
+      weatherDescription: raw.weather12H.desc,
+      iconId: raw.weather12H.icon,
+    }));
+
+  return { position, hourly, daily };
 };
 
-export const sanitizeRainForecast = (
-  payload: t.TypeOf<typeof RawRainForecast>
-): RainForecastResponse => {
-  return {
-    upcomingRain: payload.forecast.map((raw) => ({
+export const parseRainResponse = (payload: any): RainForecastResponse => {
+  const rawResponse = parseResponse(payload, RawRootRainResponse);
+  const upcomingRain = rawResponse.forecast
+    .map((raw) => safeParseResponse(raw, RawRain))
+    .filter(isNotUndefined)
+    .map((raw) => ({
       datetime: new Date(raw.dt * 1000),
       value: raw.rain,
       description: raw.desc,
-    })),
-  };
+    }));
+
+  return { upcomingRain };
 };
 
 export const fetchForecast = async (
@@ -176,7 +194,7 @@ export const fetchForecast = async (
     lon: lon.toString(),
   });
 
-  return sanitizeForecast(parseForecastResponse(payload));
+  return parseForecastResponse(payload);
 };
 
 export const fetchRainForecast = async (
@@ -188,5 +206,5 @@ export const fetchRainForecast = async (
     lon: lon.toString(),
   });
 
-  return sanitizeRainForecast(parseRainForecastResponse(payload));
+  return parseRainResponse(payload);
 };

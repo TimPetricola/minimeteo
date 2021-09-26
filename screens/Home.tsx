@@ -27,14 +27,14 @@ export default function HomeScreen({}: RootStackScreenProps<"Home">) {
   return (
     <SafeAreaView style={styles.container}>
       <PagerView style={styles.pagerView} initialPage={0}>
-        {locationQuery.data != null && (
-          <View key="1">
+        <View key="1">
+          {locationQuery.data != null && (
             <LocationWeather
               latitude={locationQuery.data.coords.latitude}
               longitude={locationQuery.data.coords.longitude}
             />
-          </View>
-        )}
+          )}
+        </View>
       </PagerView>
     </SafeAreaView>
   );
