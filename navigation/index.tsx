@@ -36,6 +36,7 @@ function RootNavigator() {
         component={HomeScreen}
         options={({ navigation }: RootStackScreenProps<"Home">) => ({
           title: "Home",
+          headerShown: false,
         })}
       />
     </Stack.Navigator>

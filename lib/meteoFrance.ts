@@ -2,7 +2,7 @@ import { number } from "fp-ts";
 import { isLeft } from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter";
-import { HourlyForecast } from "./types";
+import { DailyForecast, HourlyForecast } from "./types";
 
 const API_BASE_URL = "https://webservice.meteofrance.com";
 const METEO_FRANCE_TOKEN = "__Wj7dVSTjV9YGu1guveLyDq0g7S7TfTjaHBTPTpO0kj8__";
@@ -74,6 +74,10 @@ const RawForecast = t.type({
         min: t.number,
         max: t.number,
       }),
+      weather12H: t.type({
+        icon: t.string,
+        desc: t.string,
+      }),
     })
   ),
   forecast: t.array(
@@ -119,10 +123,7 @@ export const sanitizeForecast = (
     isRainForecastAvailable: boolean;
   };
   hourly: HourlyForecast[];
-  daily: {
-    datetime: Date;
-    temperature: { min: number; max: number };
-  }[];
+  daily: DailyForecast[];
 } => {
   return {
     position: {
@@ -154,6 +155,8 @@ export const sanitizeForecast = (
       .map((raw) => ({
         datetime: new Date(raw.dt * 1000),
         temperature: { min: raw.T.min, max: raw.T.max },
+        weatherDescription: raw.weather12H.desc,
+        iconId: raw.weather12H.icon,
       })),
   };
 };

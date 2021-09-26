@@ -7,10 +7,13 @@ import * as Location from "expo-location";
 import { useEffect, useMemo } from "react";
 import { useQuery } from "react-query";
 import { fetchForecast, fetchRainForecast } from "../lib/meteoFrance";
-import { startOfHour } from "date-fns";
+import { addHours, isAfter, isBefore, startOfHour } from "date-fns";
 import { HourlyCell } from "../components/HourlyCell";
-import { HourlyForecast } from "../lib/types";
+import { DailyForecast, HourlyForecast } from "../lib/types";
 import { WeatherIcon } from "../components/WeatherIcon";
+import { format, utcToZonedTime } from "date-fns-tz";
+import { DailyCell } from "../components/DailyCell";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen({
   navigation,
@@ -90,7 +93,7 @@ export default function HomeScreen({
   }, [navigation, forecastQuery.data?.position?.name]);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollView}
         refreshControl={
@@ -102,6 +105,7 @@ export default function HomeScreen({
       >
         {forecastQuery.data != null && (
           <>
+            <Text style={styles.title}>{forecastQuery.data.position.name}</Text>
             <WeatherIcon
               style={styles.icon}
               id={forecastQuery.data.hourly[0].iconId}
@@ -123,7 +127,7 @@ export default function HomeScreen({
               darkColor="rgba(255,255,255,0.1)"
             />
 
-            {rainForecastQuery.data != null && (
+            {/* {rainForecastQuery.data != null && (
               <>
                 <Text>{JSON.stringify(rainForecastQuery.data)}</Text>
                 <View
@@ -132,30 +136,37 @@ export default function HomeScreen({
                   darkColor="rgba(255,255,255,0.1)"
                 />
               </>
-            )}
+            )} */}
 
             <FlatList
-              data={forecastQuery.data.hourly.filter(
-                (hourly) => hourly.datetime >= startOfHour(now)
+              data={forecastQuery.data.hourly.filter((hourly) =>
+                isAfter(hourly.datetime, startOfHour(now))
               )}
               renderItem={renderHourlyForecast}
               keyExtractor={(item) => item.datetime.toISOString()}
               horizontal
             />
+
+            {forecastQuery.data.daily.map((daily) => (
+              <DailyCell
+                key={daily.datetime.toISOString()}
+                forecast={daily}
+                timeZone={forecastQuery.data.position.timeZone}
+              />
+            ))}
           </>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "white",
   },
-  scrollView: {
-    flex: 1,
-  },
+  scrollView: {},
   title: {
     fontSize: 20,
     fontWeight: "bold",

@@ -555,101 +555,129 @@ exports[`.sanitizeForecast 3`] = `
 Array [
   Object {
     "datetime": 2021-09-24T00:00:00.000Z,
+    "iconId": "p1j",
     "temperature": Object {
       "max": 24.4,
       "min": 9.7,
     },
+    "weatherDescription": "Sunny",
   },
   Object {
     "datetime": 2021-09-25T00:00:00.000Z,
+    "iconId": "p2j",
     "temperature": Object {
       "max": 26,
       "min": 10.7,
     },
+    "weatherDescription": "Cloudy",
   },
   Object {
     "datetime": 2021-09-26T00:00:00.000Z,
+    "iconId": "p16j",
     "temperature": Object {
       "max": 21.1,
       "min": 14,
     },
+    "weatherDescription": "Stormy rain",
   },
   Object {
     "datetime": 2021-09-27T00:00:00.000Z,
+    "iconId": "p4j",
     "temperature": Object {
       "max": 22.6,
       "min": 10.8,
     },
+    "weatherDescription": "Hazy sky",
   },
   Object {
     "datetime": 2021-09-28T00:00:00.000Z,
+    "iconId": "p12bisj",
     "temperature": Object {
       "max": 20.8,
       "min": 10.9,
     },
+    "weatherDescription": "Few showers",
   },
   Object {
     "datetime": 2021-09-29T00:00:00.000Z,
+    "iconId": "p14bisj",
     "temperature": Object {
       "max": 18.7,
       "min": 10.1,
     },
+    "weatherDescription": "Showers",
   },
   Object {
     "datetime": 2021-09-30T00:00:00.000Z,
+    "iconId": "p2j",
     "temperature": Object {
       "max": 16.5,
       "min": 8.2,
     },
+    "weatherDescription": "Cloudy",
   },
   Object {
     "datetime": 2021-10-01T00:00:00.000Z,
+    "iconId": "p14bisj",
     "temperature": Object {
       "max": 17.1,
       "min": 7.3,
     },
+    "weatherDescription": "Showers",
   },
   Object {
     "datetime": 2021-10-02T00:00:00.000Z,
+    "iconId": "p14bisj",
     "temperature": Object {
       "max": 17,
       "min": 7.8,
     },
+    "weatherDescription": "Showers",
   },
   Object {
     "datetime": 2021-10-03T00:00:00.000Z,
+    "iconId": "p14j",
     "temperature": Object {
       "max": 18.1,
       "min": 7.7,
     },
+    "weatherDescription": "Rain",
   },
   Object {
     "datetime": 2021-10-04T00:00:00.000Z,
+    "iconId": "p2j",
     "temperature": Object {
       "max": 19.5,
       "min": 7.2,
     },
+    "weatherDescription": "Cloudy",
   },
   Object {
     "datetime": 2021-10-05T00:00:00.000Z,
+    "iconId": "p1j",
     "temperature": Object {
       "max": 19.2,
       "min": 7.5,
     },
+    "weatherDescription": "Sunny",
   },
   Object {
     "datetime": 2021-10-06T00:00:00.000Z,
+    "iconId": "p2j",
     "temperature": Object {
       "max": 19.1,
       "min": 7.8,
     },
+    "weatherDescription": "Cloudy",
   },
   Object {
     "datetime": 2021-10-07T00:00:00.000Z,
+    "iconId": "p2j",
     "temperature": Object {
       "max": 18.7,
       "min": 7.3,
     },
+    "weatherDescription": "Cloudy",
   },
 ]
 `;
