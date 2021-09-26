@@ -2,10 +2,10 @@ import * as React from "react";
 import { FlatList, RefreshControl, ScrollView, StyleSheet } from "react-native";
 
 import { Text, View } from "./Themed";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery } from "react-query";
 import { fetchForecast, fetchRainForecast } from "../lib/meteoFrance";
-import { isAfter, startOfHour } from "date-fns";
+import { isAfter, isBefore, isEqual, startOfHour } from "date-fns";
 import { HourlyCell } from "./HourlyCell";
 import {
   ForecastResponse,
@@ -22,25 +22,37 @@ function Inner({
   forecast: ForecastResponse;
   rain: RainForecastResponse;
 }) {
-  const renderHourlyForecast = ({ item }: { item: HourlyForecast }) => {
-    return <HourlyCell forecast={item} timeZone={forecast.position.timeZone} />;
-  };
-
   const now = useMemo(() => new Date(), []);
+
+  const renderHourlyForecast = useCallback(
+    ({ item }: { item: HourlyForecast }) => {
+      return (
+        <HourlyCell forecast={item} timeZone={forecast.position.timeZone} />
+      );
+    },
+    [forecast]
+  );
+
+  const currentForecast = useMemo(() => {
+    const reversed = forecast.hourly.slice().reverse();
+    const current = reversed.find((hourly) => isBefore(hourly.datetime, now));
+    if (typeof current === "undefined") throw new Error("No current forecast");
+    return current;
+  }, [forecast, now]);
 
   return (
     <>
       <Text style={styles.title}>{forecast.position.name}</Text>
-      <WeatherIcon style={styles.icon} id={forecast.hourly[0].iconId} />
+      <WeatherIcon style={styles.icon} id={currentForecast.iconId} />
       <Text style={styles.title}>
-        {Math.round(forecast.hourly[0].temperature)}°
+        {Math.round(currentForecast.temperature)}°
       </Text>
       <Text
         style={styles.getStartedText}
         lightColor="rgba(0,0,0,0.8)"
         darkColor="rgba(255,255,255,0.8)"
       >
-        {forecast.hourly[0].weatherDescription}
+        {currentForecast.weatherDescription}
       </Text>
 
       <View
@@ -61,8 +73,10 @@ function Inner({
       )}
 
       <FlatList
-        data={forecast.hourly.filter((hourly) =>
-          isAfter(hourly.datetime, startOfHour(now))
+        data={forecast.hourly.filter(
+          (hourly) =>
+            isEqual(hourly.datetime, startOfHour(now)) ||
+            isAfter(hourly.datetime, startOfHour(now))
         )}
         renderItem={renderHourlyForecast}
         keyExtractor={(item) => item.datetime.toISOString()}
