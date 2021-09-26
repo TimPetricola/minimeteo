@@ -1,10 +1,10 @@
 import React from "react";
-import { StyleSheet } from "react-native";
 import { format, utcToZonedTime } from "date-fns-tz";
 import { DailyForecast } from "../lib/types";
-import { View, Text } from "./Themed";
 import { WeatherIcon } from "./WeatherIcon";
 import { isToday } from "date-fns";
+import Box from "./Box";
+import Text from "./Text";
 
 export function DailyCell({
   forecast,
@@ -18,32 +18,30 @@ export function DailyCell({
     ? "Today"
     : format(zonedDateTime, "E ", { timeZone });
 
-  const subtitle = isToday(zonedDateTime)
-    ? format(zonedDateTime, "E, MMM d", { timeZone })
-    : format(zonedDateTime, "MMM d", { timeZone });
+  const subtitle = format(zonedDateTime, "MMM d", { timeZone });
 
   return (
-    <View style={styles.cell}>
-      <View>
-        <Text>{title}</Text>
-        <Text>{subtitle}</Text>
-      </View>
+    <Box
+      flex={1}
+      flexDirection="row"
+      paddingHorizontal="xs"
+      alignItems="center"
+      marginHorizontal="xs"
+      justifyContent="space-between"
+    >
+      <Box>
+        <Text color="body">{title}</Text>
+        <Text color="body" opacity={0.5}>
+          {subtitle}
+        </Text>
+      </Box>
       <WeatherIcon style={{ width: 50, height: 50 }} id={forecast.iconId} />
-      <Text>
-        {Math.round(forecast.temperature.min)}° -{" "}
+      <Text color="body" fontSize={20} opacity={0.5}>
+        {Math.round(forecast.temperature.min)}°
+      </Text>
+      <Text color="body" fontSize={20}>
         {Math.round(forecast.temperature.max)}°
       </Text>
-    </View>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  cell: {
-    display: "flex",
-    flexDirection: "row",
-    paddingHorizontal: 5,
-    alignItems: "center",
-    marginHorizontal: 5,
-    justifyContent: "space-between",
-  },
-});
